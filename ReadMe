@@ -59,22 +59,32 @@ The last step probably won't work if you are not the administrator of your
 machine; in that case you either need to get your administrator to install this 
 for you, or put it in a your own local directory instead.
 
-If you are on a Mac system and/or you are otherwise having problems with the 
-Makefile, you can still install this module the old fashioned way, by copying.
+The Makefile.PL can do this for you if you substitute something like the 
+following for the first line above:
 
-The file "ParamParser.pm" goes inside the "Class" folder which is in the "lib" 
-folder that came with your Perl 5 distribution.  
+	perl Makefile.PL PREFIX=/tmp/myperl5
+	
+or:
 
-Or alternately, put it anywhere you want, but you will need to have that 
+	perl Makefile.PL PREFIX=/home/me/myperl5
+
+If you are on a Mac system that is older than Mac OS X (Mac OS 9 or earlier)
+and/or you are otherwise having problems with the Makefile, you can still
+install this module the old fashioned way, by copying.
+
+Every file in the "lib" folder of this distribution goes in its corresponding 
+location within the "lib" folder that came with your Perl 5 distribution.
+
+Or alternately, put them anywhere you want, but you will need to have that 
 location added to your include path by your main program using something like 
 this:
 
-	use lib '/users/me/www_files/lib';
+	use lib '/home/me/myperl5/lib';
 
-Then you would want to run the included test program to make sure the module is 
-installed correctly.  Call it with:
+Then you would want to run the included test programs to make sure the modules
+are installed correctly.  Call them like this:
 
-	perl test.pl
+	perl -w t/Class-ParamParser.t
 
 Any existing POD is embedded in the module itself.  The Makefile probably 
 extracted it for you in the usual manner, or you can run a POD extractor on it 
@@ -96,16 +106,21 @@ TO DO
 
 AUTHOR
 
-Copyright (c) 1999-2001, Darren R. Duncan. All rights reserved. These modules are
-free software; you can redistribute them and/or modify them under the same terms
-as Perl itself.  However, I do request that their copyright information remains
-attached to the files.  If you modify this module and redistribute a changed
-version then please attach a note listing the modifications.
+Copyright (c) 1999-2003, Darren R. Duncan.  All rights reserved.  This module
+is free software; you can redistribute it and/or modify it under the same terms
+as Perl itself.  However, I do request that this copyright information and
+credits remain attached to the file.  If you modify this module and
+redistribute a changed version then please attach a note listing the
+modifications.  This module is available "as-is" and the author can not be held
+accountable for any problems resulting from its use.
 
 I am always interested in knowing how my work helps others, so if you put this
-module to use in any of your own code then please send me the URL.  Also, if you
-make modifications to the module because it doesn't work the way you need, please
-send me a copy so that I can roll desirable changes into the main release.
+module to use in any of your own products or services then I would appreciate
+(but not require) it if you send me the website url for said product or
+service, so I know who you are.  Also, if you make non-proprietary changes to
+the module because it doesn't work the way you need, and you are willing to
+make these freely available, then please send me a copy so that I can roll
+desirable changes into the main release.
 
 Address comments, suggestions, and bug reports to perl@DarrenDuncan.net.
 

@@ -1,5 +1,5 @@
 # Before `make install' is performed this script should be runnable with
-# `make test'. After `make install' it should work as `perl test.pl'
+# `make test'. After `make install' it should work as `perl t/Class-ParamParser.t'
 
 ######################### We start with some black magic to print on failure.
 
@@ -8,7 +8,7 @@
 
 BEGIN { $| = 1; print "1..90\n"; }
 END {print "not ok 1\n" unless $loaded;}
-use Class::ParamParser 1.0401;
+use Class::ParamParser 1.041;
 $loaded = 1;
 print "ok 1\n";
 
@@ -22,15 +22,16 @@ print "ok 1\n";
 
 package ClassParamParserTest;
 use strict;
+use warnings;
 
 use vars qw( @ISA );
 @ISA = qw( Class::ParamParser );
 
 # Set this to 1 for details on how the test data look before and after parsing
-my $verbose = 0;
+my $verbose = shift( @ARGV ) ? 1 : 0;  # set from command line
 
 # Set this to 1 to do only the last test
-my $only_last = 0;
+my $only_last = shift( @ARGV ) ? 1 : 0;  # set from command line
 
 ######################################################################
 # Here are some utility methods:

@@ -1,6 +1,6 @@
 ChangeLog
+lib/Class/ParamParser.pm
 Makefile.PL
 MANIFEST
-ParamParser.pm
 ReadMe
-test.pl
+t/Class-ParamParser.t
