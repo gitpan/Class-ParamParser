@@ -25,7 +25,7 @@ package ClassParamParserTest;
 use strict;
 use vars qw( @ISA );
 
-use Class::ParamParser 1.02;
+use Class::ParamParser 1.03;
 @ISA = qw( Class::ParamParser );
 
 # Set this to 1 for details on how the test data look before and after parsing
@@ -97,7 +97,7 @@ sub serialize {
 		ref($input) eq 'HASH' ? 
 			( '{ ', ( map { 
 				( serialize( $_, 1 ), serialize( $input->{$_} ) ) 
-			} keys %{$input} ), '}, ' ) 
+			} sort keys %{$input} ), '}, ' ) 
 		: ref($input) eq 'ARRAY' ? 
 			( '[ ', ( map { 
 				( serialize( $_ ) ) 

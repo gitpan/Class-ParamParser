@@ -1,3 +1,32 @@
+2001-02-06   Darren Duncan <perl@DarrenDuncan.net>
+
+	* Release 1.03.
+	
+	* This release fixes issues discovered by cpan-testers@perl.org, as detailed 
+	in brief below.
+	
+	* Renamed some included files to "Makefile.PL", "test.pl", and "MANIFEST".  
+	Due to the case-sensitivity of some systems, it is like the files aren't 
+	there otherwise.
+	
+	* The RENAME hash is now iterated over in the order of "sort keys %hash" 
+	instead of "keys %hash".  This ensures that renaming pairs are always 
+	evaluated in the same order across different Perl installs (given the same 
+	hash, "keys %hash" returns its results in a different order on some systems 
+	than on others).  During normal use, this wouldn't affect anything, because 
+	one isn't *supposed* to be renaming one key to the same thing another is 
+	renamed from.  But in the odd circumstance that one is doing that, it does 
+	make a difference in which order "a->b,c->a" is evaluated.
+	
+	* The serialize() function inside "test.pl", that I use to stringify the 
+	multi-dimensional data structures it needs to compare, has been modified such 
+	hashes are now serialized in the order of "sort keys %hash" instead of 
+	"keys %hash".  This change was prompted by test failures on one system due to 
+	the fact that equal hashes were serializing in a different order across 
+	systems, so the comparisons as scalars didn't always match.
+	
+	* Improved the install instructions in my ReadMe file.
+	
 2001-02-04   Darren Duncan <perl@DarrenDuncan.net>
 
 	* Release 1.02.

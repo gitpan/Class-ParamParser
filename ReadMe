@@ -39,45 +39,59 @@ changed.
 REQUIREMENTS
 
 All of my modules require Perl 5.004 or newer, even though only some of them need
-it, in the interest of consistency.  This module doesn't require anything else.
+it, in the interest of consistency.  That said, Perl 5.004 is already 3 years 
+old, is available as a binary on practically every OS that supports Perl at all, 
+and is a very solid release, so I see no reason to support anything older.
+
+This module doesn't require anything else.
 
 INSTALLATION
 
-There is a makefile included, and it should work like any standard makefile.  
-After extracting the files from this archive and into a directory, you would 
-presumably cd into that directory and run "make" like this:
+To install this module, cd to the directory that contains all of the extracted 
+distribution files, including this ReadMe file, and type the following:
 
-	perl MakeFile.pl
+	perl Makefile.PL
 	make
 	make test
 	make install
 
-If that doesn't work for some reason, you will instead have to install this the
-old fashioned way, by copying.  The file "ParamParser.pm" goes inside the "Class"
-folder which is in the "lib" folder that came with your Perl 5 distribution.  Or
-alternately, put it anywhere you want, but you will need to have that location
-added to your include path by your main program using something like this:
+The last step probably won't work if you are not the administrator of your 
+machine; in that case you either need to get your administrator to install this 
+for you, or put it in a your own local directory instead.
+
+If you are on a Mac system and/or you are otherwise having problems with the 
+Makefile, you can still install this module the old fashioned way, by copying.
+
+The file "ParamParser.pm" goes inside the "Class" folder which is in the "lib" 
+folder that came with your Perl 5 distribution.  
+
+Or alternately, put it anywhere you want, but you will need to have that 
+location added to your include path by your main program using something like 
+this:
 
 	use lib '/users/me/www_files/lib';
 
 Then you would want to run the included test program to make sure the module is 
 installed correctly.  Call it with:
 
-	perl Test.pl
+	perl test.pl
 
-Any existing POD is embedded in the module itself, so you will have to look there
-to see it, or run a POD extractor on it yourself, or look at the copy on CPAN
-that is dutifully extracted and turned to HTML.
+Any existing POD is embedded in the module itself.  The Makefile probably 
+extracted it for you in the usual manner, or you can run a POD extractor on it 
+yourself to the same effect.  You can also find an HTMLized copy of the POD on 
+CPAN and other public source archives; I link to one copy of it on my web site.
 
 SUPPORT
 
 Currently I don't have any support arranged with other people, lists, newsgroups,
 or otherwise.  Feel free to ask me if you can't figure things out on your own, or
-another person whom you know has used this.
+another person whom you know has used this.  I may start a mailing list for 
+support issues later, so that users of my modules can help each other with them.
 
 TO DO
 
-	* Verify that the MakeFile is working.  I know that the Test works.
+	* I have no more ideas in this regard, but am open to suggestions.
+	* Get my other modules done.
 
 AUTHOR
 

@@ -1,6 +1,6 @@
 ChangeLog
-MakeFile.pl
-Manifest
+Makefile.PL
+MANIFEST
 ParamParser.pm
 ReadMe
-Test.pl
+test.pl

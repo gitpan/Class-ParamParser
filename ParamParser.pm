@@ -17,7 +17,7 @@ require 5.004;
 
 use strict;
 use vars qw($VERSION);
-$VERSION = '1.02';
+$VERSION = '1.03';
 
 ######################################################################
 
@@ -282,7 +282,7 @@ sub params_to_hash_or_array {
 		
 		# Coerce parameter names into correct format and resolve aliases
 
-		foreach my $key (keys %params_out) {
+		foreach my $key (sort keys %params_out) {
 			my $value = delete( $params_out{$key} );	
 			if( substr( $key, 0, 1 ) eq '-' ) {
 				$key = substr( $key, 1 );             # remove any leading "-"
