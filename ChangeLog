@@ -1,3 +1,18 @@
+2001-01-01   Darren Duncan <perl@DarrenDuncan.net>
+
+	* Release 1.01.
+	
+	* This release is the first one following official registrations with 
+	"The Perl 5 Module List".  The updated entry would look like this:
+	
+Class::
+::ParamParser     bdpO Provides complex parameter list parsing      DUNCAND
+	
+	* Module POD has been significantly updated, particularly in the Synopsis 
+	section, and the ReadMe file was overhauled.
+	
+	* There were no changes to the code itself.
+
 2000-08-26   Darren Duncan <perl@DarrenDuncan.net>
 
 	* Release 1.0.

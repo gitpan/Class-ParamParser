@@ -1,7 +1,6 @@
 =head1 NAME
 
-Class::ParamParser - Perl module that provides complex parameter list parsing for
-subclass methods.
+Class::ParamParser - Provides complex parameter list parsing.
 
 =cut
 
@@ -10,7 +9,7 @@ subclass methods.
 package Class::ParamParser;
 require 5.004;
 
-# Copyright (c) 1999-2000, Darren R. Duncan. All rights reserved. This module is
+# Copyright (c) 1999-2001, Darren R. Duncan. All rights reserved. This module is
 # free software; you can redistribute it and/or modify it under the same terms as
 # Perl itself.  However, I do request that this copyright information remain
 # attached to the file.  If you modify this module and redistribute a changed
@@ -18,7 +17,7 @@ require 5.004;
 
 use strict;
 use vars qw($VERSION);
-$VERSION = '1.0';
+$VERSION = '1.01';
 
 ######################################################################
 
@@ -26,7 +25,7 @@ $VERSION = '1.0';
 
 =head2 Perl Version
 
-	5.004
+	5.004 (although 5.0 may work)
 
 =head2 Standard Modules
 
@@ -41,6 +40,8 @@ $VERSION = '1.0';
 	use Class::ParamParser;
 	@ISA = qw( Class::ParamParser );
 
+=head2 PARSING PARAMS INTO NAMED HASH
+
 	sub textfield {
 		my $self = shift( @_ );
 		my $rh_params = $self->params_to_hash( \@_, 0, 
@@ -50,6 +51,15 @@ $VERSION = '1.0';
 		return( $self->make_html_tag( 'input', $rh_params ) );
 	}
 
+	sub textarea {
+		my $self = shift( @_ );
+		my $rh_params = $self->params_to_hash( \@_, 0, 
+			[ 'name', 'text', 'rows', 'cols' ], { 'default' => 'text', 
+			'value' => 'text', 'columns' => 'cols' }, 'text' );
+		my $ra_text = delete( $rh_params->{'text'} );
+		return( $self->make_html_tag( 'textarea', $rh_params, $ra_text ) );
+	}
+
 	sub AUTOLOAD {
 		my $self = shift( @_ );
 		my $rh_params = $self->params_to_hash( \@_, 0, 'text', {}, 'text' );
@@ -57,6 +67,34 @@ $VERSION = '1.0';
 		$AUTOLOAD =~ m/([^:]*)$/;
 		my $tag_name = $1;
 		return( $self->make_html_tag( $tag_name, $rh_params, $ra_text ) );
+	}
+
+=head2 PARSING PARAMS INTO POSITIONAL ARRAY
+
+	sub property {
+		my $self = shift( @_ );
+		my ($key,$new_value) = $self->params_to_array(\@_,1,['key','value']);
+		if( defined( $new_value ) ) {
+			$self->{$key} = $new_value;
+		}
+		return( $self->{$key} );
+	}
+
+	sub make_html_tag {
+		my $self = shift( @_ );
+		my ($tag_name, $rh_params, $ra_text) = 
+			$self->params_to_array( \@_, 1, 
+			[ 'tag', 'params', 'text' ],
+			{ 'name' => 'tag', 'param' => 'params' } );
+		ref($rh_params) eq 'HASH' or $rh_params = {};
+		ref($ra_text) eq 'ARRAY' or $ra_text = [$ra_text];
+		return( join( '', 
+			"<$tag_name", 
+			(map { " $_=\"$rh_params->{$_}\"" } keys %{$rh_params}),
+			">",
+			@{$ra_text},
+			"</$tagname>",
+		) );
 	}
 
 =head1 DESCRIPTION
@@ -118,14 +156,11 @@ If the source and destination are both positional, then they are identical.
 =head1 SYNTAX
 
 This class does not export any functions or methods, so you need to call them
-using indirect notation.  This means using B<Class-E<gt>function()> for functions and
-B<$object-E<gt>method()> for methods.  If you are inheriting this class for your own
-modules, then that often means something like B<$self-E<gt>method()>.  
-
-However, if you feel like breaking the "indirect notation" rules, you can still
-call the method using a dummy value instead of the implicit object/class that is
-usually passed.  This won't break anything as the object isn't used.  However,
-this practice is depreciated as of Perl 5.004 and probably won't work later.
+using object notation.  This means using B<Class-E<gt>function()> for functions
+and B<$object-E<gt>method()> for methods.  If you are inheriting this class for
+your own modules, then that often means something like B<$self-E<gt>method()>. 
+Note that this class doesn't have any properties of its own, and doesn't use the
+implicitely passed class/object reference in any way.
 
 =head1 FUNCTIONS AND METHODS
 
@@ -270,7 +305,7 @@ sub params_to_array {
 1;
 __END__
 
-=head1 PARAMETERS
+=head1 ARGUMENTS
 
 The arguments for the above methods are the same, so they are discussed together
 here:
@@ -326,7 +361,7 @@ The default value for REM is "", and it is discarded unless renamed.
 
 =head1 AUTHOR
 
-Copyright (c) 1999-2000, Darren R. Duncan. All rights reserved. This module is
+Copyright (c) 1999-2001, Darren R. Duncan. All rights reserved. This module is
 free software; you can redistribute it and/or modify it under the same terms as
 Perl itself.  However, I do request that this copyright information remain
 attached to the file.  If you modify this module and redistribute a changed
@@ -341,6 +376,6 @@ Address comments, suggestions, and bug reports to B<perl@DarrenDuncan.net>.
 
 =head1 SEE ALSO
 
-perl(1), CGI.
+perl(1).
 
 =cut

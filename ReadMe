@@ -3,63 +3,36 @@
 
 by Darren Duncan <perl@DarrenDuncan.net>
 
-SYNOPSIS
+CONTENTS
 
-	use Class::ParamParser;
-	@ISA = qw( Class::ParamParser );
+* Preface
+* Manifest
+* Keeping Up To Date
+* Requirements
+* Installation
+* Support
+* To Do
+* Author
 
-	sub textfield {
-		my $self = shift( @_ );
-		my $rh_params = $self->params_to_hash( \@_, 0,
-			[ 'name', 'value', 'size', 'maxlength' ],
-			{ 'default' => 'value' } );
-		$rh_params->{'type'} = 'text';
-		return( $self->make_html_tag( 'input', $rh_params ) );
-	}
+PREFACE
 
-	sub AUTOLOAD {
-		my $self = shift( @_ );
-		my $rh_params = $self->params_to_hash( \@_, 0, 'text', {}, 'text' );
-		my $ra_text = delete( $rh_params->{'text'} );
-		$AUTOLOAD =~ m/([^:]*)$/;
-		my $tag_name = $1;
-		return( $self->make_html_tag( $tag_name, $rh_params, $ra_text ) );
-	}
+This distribution features the Perl 5 module named "Class::ParamParser".
 
-DESCRIPTION
+All of my modules have complete POD inside of them, so please refer to that for a
+description of the module itself.
 
-This Perl 5 object class implements two methods which inherited classes can use
-to tidy up parameter lists for their own methods and functions.  The two methods
-differ in that one returns a HASH ref containing named parameters and the other
-returns an ARRAY ref containing positional parameters.
+This Read Me document concerns itself mainly with installation and support
+issues, and also includes any "To Do" lists and the file manifest.
 
-Both methods can process the same kind of input parameter formats: 
+MANIFEST
 
-	empty list 
-	value 
-	value1, value2, ... 
-	name1 => value1, name2 => value2, ... 
-	-name1 => value1, -name2 => value2, ... 
-	{ -name1 => value1, name2 => value2, ... } 
-	{ name1 => value1, -name2 => value2, ... }, valueR 
-
-Those examples included single or multiple positional parameters, single or
-multiple named parameters, and a HASH ref containing named parameters (with
-optional "remaining" value afterwards).  That list of input variations is not
-exhaustive.  Named parameters can either be prefixed with "-" or left natural. 
-In addition, your methods can have multiple aliases for named parameters, but
-your own code would only have to deal with a single one.
-
-For a complete description, please refer to the POD that is contained in the
-module itself.
-
-To see full-fledged examples of this module in use, check out my other modules
-named HTML::TagMaker and HTML::FormMaker, each of whose methods accept a wide
-variety of argument formats due to the use of Class::ParamParser.
+ChangeLog
+ParamParser.pm
+ReadMe
 
 KEEPING UP TO DATE
 
-These modules are constantly under development.  You should be able to find the
+My module set is constantly under development.  You should be able to find the
 newest versions at my website, "http://www.DarrenDuncan.net", on the page called
 "Perl Libraries I Made" (name subject to change).  They can also be found on CPAN
 under the author name of "DUNCAND".  
@@ -95,9 +68,14 @@ Currently I don't have any support arranged with other people, lists, newsgroups
 or otherwise.  Feel free to ask me if you can't figure things out on your own, or
 another person whom you know has used this.
 
+TO DO
+
+	* Add a Make File to the distribution.
+	* Add testing scripts.
+
 AUTHOR
 
-Copyright (c) 1999-2000, Darren R. Duncan. All rights reserved. These modules are
+Copyright (c) 1999-2001, Darren R. Duncan. All rights reserved. These modules are
 free software; you can redistribute them and/or modify them under the same terms
 as Perl itself.  However, I do request that their copyright information remains
 attached to the files.  If you modify this module and redistribute a changed
