@@ -17,7 +17,7 @@ require 5.004;
 
 use strict;
 use vars qw($VERSION);
-$VERSION = '1.03';
+$VERSION = '1.04';
 
 ######################################################################
 
@@ -178,8 +178,39 @@ See below for argument descriptions.
 ######################################################################
 
 sub params_to_hash {
-	my $self = shift( @_ );
-	return( $self->params_to_hash_or_array( 0, @_ ) );
+	my ($self, $ra_args, $posit_by_def, $ra_posit_names, $rh_rename, 
+		$remaining_param_name, $lc) = @_;
+
+	# Shortcut - no input means no output.
+	ref( $ra_args ) eq 'ARRAY' and @{$ra_args} or return( {} );
+
+	# Put named arguments in $rh_args if there are any; put undef otherwise.
+	# When the first element of $ra_args is a hash ref, other elems go in @rem.
+	my ($rh_args, @rem) = $self->_args_are_named( $ra_args, 1, !$posit_by_def );
+
+	# If the arguments are not named then...
+	ref( $rh_args ) eq 'HASH' or do {
+
+		# Shortcut - input is positional but no named translator, so no output.
+		ref( $ra_posit_names ) eq 'ARRAY' and @{$ra_posit_names} or return( {} );
+		
+		# Translate positional arguments to named and return them.
+		ref( $ra_posit_names ) eq 'ARRAY' or $ra_posit_names = [$ra_posit_names];
+		return( $self->_posit_to_named( $ra_args, $ra_posit_names ) );
+	};
+	
+	# Normalize named argument aliases to their standard versions.
+	ref( $rh_rename ) eq 'HASH' or $rh_rename = {};
+	my %args_out = %{$self->_rename_named_args( $rh_args, $rh_rename, 1, $lc )};
+
+	# Incorporate "remaining" arguments if desired.
+	if( @rem and $remaining_param_name ) {
+		$args_out{$remaining_param_name} = 
+			(ref( $rem[0] ) eq 'ARRAY' or @rem == 1) ? $rem[0] : \@rem;
+	}
+
+	# Return named arguments.
+	return( \%args_out );
 }
 
 ######################################################################
@@ -193,148 +224,38 @@ See below for argument descriptions.
 ######################################################################
 
 sub params_to_array {
-	my $self = shift( @_ );
-	return( $self->params_to_hash_or_array( 1, @_ ) );
-}
+	my ($self, $ra_args, $posit_by_def, $ra_posit_names, $rh_rename, 
+		$remaining_param_name, $lc) = @_;
 
-######################################################################
+	# Shortcut - no input means no output.
+	ref( $ra_args ) eq 'ARRAY' and @{$ra_args} or return( [] );
 
-=head2 params_to_hash_or_array( TO, SOURCE, DEF, NAMES[, RENAME[, REM[, LC]]] )
+	# Put named arguments in $rh_args if there are any; put undef otherwise.
+	# When the first element of $ra_args is a hash ref, other elems go in @rem.
+	my ($rh_args, @rem) = $self->_args_are_named( $ra_args, 1, !$posit_by_def );
 
-This bonus third method is used internally to implement the first two.  It has 
-an extra first argument, TO, which causes an Array ref to be returned when true 
-and a Hash ref to be returned when false; the default value is false.
+	# If the arguments are not named, then return a copy of positional arguments.
+	ref( $rh_args ) eq 'HASH' or return( [@{$ra_args}] );  # input = output
 
-=cut
-
-######################################################################
-
-sub params_to_hash_or_array {
-	my $self = shift( @_ );
-	my $going_to_array = shift( @_ ) || 0;  # true means going to hash
+	# Shortcut - input is named but no positional translator, so no output.
+	ref( $ra_posit_names ) eq 'ARRAY' and @{$ra_posit_names} or return( [] );
 	
-	# Fetch our arguments
-	
-	my $ra_params_in = shift( @_ );  # also called "source"
-	my $posit_by_def = shift( @_ ) || 0;	
-	my $ra_posit_names = shift( @_ ) || [];  # also single param name
-	my $rh_params_to_rename = shift( @_ );
-	my $remaining_param_name = shift( @_ ) || '';  # follows literal hash
-	my $lowercase_names = shift( @_ ) || 0;  # force param names into lowercase
+	# Normalize named argument aliases to their standard versions.
+	ref( $rh_rename ) eq 'HASH' or $rh_rename = {};
+	my %args_out = %{$self->_rename_named_args( $rh_args, $rh_rename, 1, $lc )};
 
-	# Make sure our arguments are in the right format
+	# Incorporate "remaining" arguments if desired.
+	if( @rem and $remaining_param_name ) {
+		$args_out{$remaining_param_name} = 
+			(ref( $rem[0] ) eq 'ARRAY' or @rem == 1) ? $rem[0] : \@rem;
+	}
 
-	ref( $ra_params_in ) eq 'ARRAY' or $ra_params_in = [];
+	# Translate named arguments to positional and return them.
 	ref( $ra_posit_names ) eq 'ARRAY' or $ra_posit_names = [$ra_posit_names];
-	ref( $rh_params_to_rename ) eq 'HASH' or $rh_params_to_rename = {};
-
-	# Shortcut - if our source is empty, so is our output
-	
-	unless( @{$ra_params_in} ) {
-		return( $going_to_array ? [] : {} );
-	}
-
-	# Determine if source parameters are in positional or named format
-
-	my $is_positional;
-	if( ref( $ra_params_in->[0] ) eq 'HASH' or 
-			substr( $ra_params_in->[0], 0, 1 ) eq '-' ) {
-		$is_positional = 0;        # literal hash or first param starts with "-"
-	} elsif( @{$ra_params_in} % 2 ) {
-		$is_positional = 1;        # odd number of parameters
-	} else {
-		$is_positional = $posit_by_def;  # even num of params, no "-" on first
-	}
-	
-	# Declare the destination variables we will output
-	
-	my %params_out = ();
-	my @params_out = ();
-	
-	# If source is positional, then no need to worry about improper names
-	
-	if( $is_positional ) {
-
-		# Output = Input when both are positional
-
-		if( $going_to_array ) {
-			@params_out = @{$ra_params_in};
-
-		# Do a mapped conversion from positional to named format
-
-		} else {
-			foreach my $i (0..$#{$ra_params_in}) {
-				$params_out{$ra_posit_names->[$i]} = $ra_params_in->[$i];
-			}
-		}
-
-	# If source is named, we need to make sure names are correct
-
-	} else {
-
-		# Fetch named parameter list from wherever it is
-
-		if( ref( $ra_params_in->[0] ) eq 'HASH' ) {
-			%params_out = %{$ra_params_in->[0]};  # first param as literal hash
-		} else {
-			%params_out = @{$ra_params_in};       # or whole param list
-		}
-		
-		# Coerce parameter names into correct format and resolve aliases
-
-		foreach my $key (sort keys %params_out) {
-			my $value = delete( $params_out{$key} );	
-			if( substr( $key, 0, 1 ) eq '-' ) {
-				$key = substr( $key, 1 );             # remove any leading "-"
-			}
-			$lowercase_names and $key = lc( $key );   # change to lowercase
-			if( exists( $rh_params_to_rename->{$key} ) ) {
-				$key = $rh_params_to_rename->{$key};  # change to favorite alias 
-			}
-			$params_out{$key} = $value;
-		}
-
-		# Look for any "remaining" parameter and include it in output
-
-		if( ref( $ra_params_in->[0] ) eq 'HASH' 
-				and $#{$ra_params_in} > 0 ) {
-
-			# If exactly one "remaining", or first is array ref, return it as is
-
-			if( ref( $ra_params_in->[1] ) eq 'ARRAY' 
-					or $#{$ra_params_in} == 1 ) {
-				$params_out{$remaining_param_name} = $ra_params_in->[1];
-
-			# If multiple "remaining" and first not an array, return all in array
-
-			} else {
-				$params_out{$remaining_param_name} = 
-					[@{$ra_params_in}[1..$#{$ra_params_in}]];
-			}
-		}
-
-		# Do a mapped conversion from named to positional format
-
-		if( $going_to_array ) {
-			foreach my $i (0..$#{$ra_posit_names}) {
-				$params_out[$i] = $params_out{$ra_posit_names->[$i]};
-			}
-		}
-	}
-	
-	# Remove unwanted parameters from output list
-	
-	delete( $params_out{''} );
-
-	# Return parsed params in appropriate variable type
-
-	return( $going_to_array ? \@params_out : \%params_out );
+	return( $self->_named_to_posit( \%args_out, $ra_posit_names ) );
 }
 
 ######################################################################
-
-1;
-__END__
 
 =head1 ARGUMENTS
 
@@ -402,6 +323,94 @@ well as lowercased NAMES and REM; none of these are lowercased for you.
 
 =back
 
+=cut
+
+######################################################################
+# _args_are_named( ARGS[, USE_DASHES[, GUESS_NAMED]] )
+# This private method will check if the incoming argument list, provided in 
+# the array ref argument ARGS, appears to be in named format or not.  If it is 
+# named then this method will return a hash ref containing the raw named 
+# version (true); otherwise, it returns undef (false).  By default, ARGS is 
+# known to be named if its first element is a hash ref, and assumed to be 
+# positional if the count of arguments is odd.  If neither of those two 
+# conditions are true then we have an even argument count and we are in doubt 
+# of whether they are named or not.  The argument GUESS_NAMED says what to do 
+# in that case; if it is true then we guess named and if it is false then we 
+# guess positional.  If the argument USE_DASHES is true then we check the first 
+# element in ARGS to see if it begins with a dash, "-", and if it does then we 
+# assume that ARGS is named regardless of the count of elements.
+# When the first element of ARGS is a hash ref, any other elements of ARGS are 
+# also returned as "remaining" values, if they exist, after the hash ref.
+# So you can call this like "($rh_named, @rem) = _args_are_named()".
+
+sub _args_are_named {
+	my ($self, $ra_args, $use_dashes, $guess_named) = @_;
+	if( ref( $ra_args->[0] ) eq 'HASH' ) {
+		return( @{$ra_args} );  # literal hash in first return elem
+	} elsif( $use_dashes and substr( $ra_args->[0], 0, 1 ) eq '-' ) {
+		return( { @{$ra_args} } );  # first element starts with "-"
+	} elsif( @{$ra_args} % 2 ) {
+		return( undef );  # odd # elements
+	} else {
+		return( $guess_named ? { @{$ra_args} } : undef );  # even num elements
+	}
+}
+
+# _posit_to_named( ARGS, POSIT_NAMES )
+# This private method will take ARGS in positional format, as an array ref, and 
+# return a named version as a hash ref.  POSIT_NAMES is an array ref that is 
+# used as a translation table between the two formats.  The elements ot 
+# POSIT_NAMES are the new names for arguments at corresponding element numbers 
+# in ARGS.
+
+sub _posit_to_named {
+	my ($self, $ra_args, $ra_pn) = @_;
+	my %args_out = map { ( $ra_pn->[$_] => $ra_args->[$_] ) } (0..$#{$ra_args});
+	delete( $args_out{''} );  # remove unwanted elements
+	return( \%args_out );
+}
+
+# _named_to_posit( ARGS, POSIT_NAMES )
+# This private method will take ARGS in named format, as an hash ref, and return 
+# a positional version as an array ref.  POSIT_NAMES is an array ref that is 
+# used as a translation table between the two formats.  The elements ot 
+# POSIT_NAMES are matched with keys in ARGS and the values of ARGS are output in 
+# corresponding element numbers with POSIT_NAMES.
+
+sub _named_to_posit {
+	my ($self, $rh_args, $ra_pn) = @_;
+	return( [ map { $rh_args->{$ra_pn->[$_]} } (0..$#{$ra_pn}) ] );
+}
+
+# _rename_named_args( ARGS, RENAME[, USE_DASHES[, LOWERCASE]] )
+# This private method will take a hash ref as input via ARGS and copy it into a 
+# new hash ref, which it returns.  During the copy, hash keys may be renamed in 
+# several ways.  If LOWERCASE is true then the key is lowercase.  If USE_DASHES 
+# is true then the leading character is removed if it is a dash, "-".  Finally, 
+# the keys are looked up using the hash ref RENAME, and if there are matching 
+# keys then the associated RENAME values are substituted.  If any key is 
+# renamed to the empty string or undef then it is deleted.
+
+sub _rename_named_args {
+	my ($self, $rh_args, $rh_rename, $use_dashes, $lowercase) = @_;
+	my %args_out = ();
+	foreach my $key (sort keys %{$rh_args}) {
+		my $value = $rh_args->{$key};
+		$lowercase and $key = lc( $key );  # change to lowercase
+		$use_dashes and substr( $key, 0, 1 ) eq '-' and 
+			$key = substr( $key, 1 );  # remove leading "-"
+		exists( $rh_rename->{$key} ) and $key = $rh_rename->{$key};  # chg alias
+		$args_out{$key} = $value;
+	}
+	delete( $args_out{''} );  # remove unwanted elements
+	return( \%args_out );
+}
+
+######################################################################
+
+1;
+__END__
+
 =head1 AUTHOR
 
 Copyright (c) 1999-2001, Darren R. Duncan. All rights reserved. This module is
@@ -419,6 +428,7 @@ Address comments, suggestions, and bug reports to B<perl@DarrenDuncan.net>.
 
 =head1 SEE ALSO
 
-perl(1).
+perl(1), HTML::FormTemplate, Class::ParmList, Class::NamedParms, 
+Getargs::Long, Params::Validate, CGI.
 
 =cut

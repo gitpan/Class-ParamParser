@@ -6,9 +6,9 @@
 # Change 1..1 below to 1..last_test_to_print .
 # (It may become useful if the test is moved to ./t subdirectory.)
 
-BEGIN { $| = 1; print "1..92\n"; }
+BEGIN { $| = 1; print "1..90\n"; }
 END {print "not ok 1\n" unless $loaded;}
-# use Class::ParamParser;
+use Class::ParamParser 1.04;
 $loaded = 1;
 print "ok 1\n";
 
@@ -21,11 +21,9 @@ print "ok 1\n";
 ######################################################################
 
 package ClassParamParserTest;
-
 use strict;
-use vars qw( @ISA );
 
-use Class::ParamParser 1.03;
+use vars qw( @ISA );
 @ISA = qw( Class::ParamParser );
 
 # Set this to 1 for details on how the test data look before and after parsing
@@ -53,7 +51,8 @@ sub end {
 
 sub failure {
 	my ($fail_msg) = @_;
-	$test_fail = 1 and push( @test_msg, "$fail_msg; " );
+	$test_fail = 1;
+	push( @test_msg, "$fail_msg; " );
 }
 
 sub result {
@@ -345,7 +344,7 @@ my @TESTS = (
 			4 => { 'name2' => 'value3', 'name5' => 'value1', }, 
 			5 => { 'name2' => 'value3', 'name5' => 'value1', }, 
 			6 => { 'name2' => 'value3', 'name5' => 'value1', }, 
-			7 => { 'name2' => 'value3', 'name5' => 'value1', }, 
+			7 => { 'name2' => 'value2', 'name5' => 'value1', }, 
 			8 => { 'name2' => 'value2', 'name5' => 'value1', }, 
 		}, 
 		$KOUTA => {
@@ -355,7 +354,7 @@ my @TESTS = (
 			4 => [ undef, 'value3', undef, ], 
 			5 => [ undef, 'value3', undef, ], 
 			6 => [ undef, 'value3', undef, ], 
-			7 => [ undef, 'value3', undef, ], 
+			7 => [ undef, 'value2', undef, ], 
 			8 => [ undef, 'value2', undef, ], 
 		}, 
 	}, 
@@ -414,12 +413,12 @@ my @TESTS = (
 		], 
 		$KOUTH => {
 			6 => { 'name2' => 'value3', 'name5' => 'value1', }, 
-			7 => { 'name2' => 'value3', 'name3' => 'valueR', 'name5' => 'value1', }, 
+			7 => { 'name2' => 'value2', 'name3' => 'valueR', 'name5' => 'value1', }, 
 			8 => { 'name2' => 'value2', 'name3' => [ 'valueR1', 'valueR2', ], 'name5' => 'value1', }, 
 		}, 
 		$KOUTA => {
 			6 => [ undef, 'value3', undef, ], 
-			7 => [ undef, 'value3', 'valueR', ], 
+			7 => [ undef, 'value2', 'valueR', ], 
 			8 => [ undef, 'value2', [ 'valueR1', 'valueR2', ], ], 
 		}, 
 	}, 
@@ -442,7 +441,6 @@ my @TESTS = (
 		}, 
 	}, 
 );
-# =head2 params_to_hash( SOURCE, DEF, NAMES[, RENAME[, REM[, LC]]] )
 
 ######################################################################
 
@@ -460,18 +458,6 @@ end();
 start();
 unless( (my $type = ref( $obj->params_to_array() )) eq 'ARRAY' ) {
 	failure( "params_to_array() returned a '$type'" );
-}
-end();
-
-start();
-unless( (my $type = ref( $obj->params_to_hash_or_array( 0 ) )) eq 'HASH' ) {
-	failure( "params_to_hash_or_array( 0 ) returned a '$type'" );
-}
-end();
-
-start();
-unless( (my $type = ref( $obj->params_to_hash_or_array( 1 ) )) eq 'ARRAY' ) {
-	failure( "params_to_hash_or_array( 1 ) returned a '$type'" );
 }
 end();
 

@@ -21,7 +21,7 @@ All of my modules have complete POD inside of them, so please refer to that for 
 description of the module itself.
 
 This Read Me document concerns itself mainly with installation and support
-issues, and also includes any "To Do" lists and the file manifest.
+issues, and also includes any "To Do" lists.
 
 KEEPING UP TO DATE
 
@@ -90,6 +90,7 @@ support issues later, so that users of my modules can help each other with them.
 
 TO DO
 
+	* Possibly merge this module into a new standard named-arguments module.
 	* I have no more ideas in this regard, but am open to suggestions.
 	* Get my other modules done.
 

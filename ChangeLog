@@ -1,3 +1,32 @@
+2001-05-01   Darren Duncan <perl@DarrenDuncan.net>
+
+	* Release 1.04.
+	
+	* This module has been reorganized internally by separating its core 
+	functionality into a set of private methods: _args_are_named(), 
+	_posit_to_named(), _named_to_posit(), _rename_named_args().  The two public 
+	methods, params_to_hash() and params_to_array() make use of these as much as 
+	possible and otherwise handle their proprietary details on their own.
+	
+	* The above changes were made in preparation for merging this module with 
+	other existing named-arguments modules to produce a new standard module.  
+	Of course, there is a chance nothing will happen, in which case this module 
+	is simply better organized now than before, as well as easier to subclass.
+	
+	* The pseudo-public method params_to_hash_or_array() no longer exists, so 
+	any code that calls it directly will break.  No one should have been using 
+	it directly anyway, as it was just to implement the other public methods.
+	The count of tests was reduced to 90 from 92 as the two missing ones called 
+	the removed method directly.
+	
+	* Named arguments being renamed are now moved into a second hash during the 
+	process rather than being re-inserted into the one they came from.  As a 
+	result, some name-collisions may result in one value overriding the other 
+	instead of the reverse.  Note that the results of collisions are now easier 
+	to predict than before.  This change affected two test results, which have 
+	been updated to make the new way correct.  Of course, you should never set 
+	up your renaming such that there are collisions anyway.
+
 2001-02-06   Darren Duncan <perl@DarrenDuncan.net>
 
 	* Release 1.03.
