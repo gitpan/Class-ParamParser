@@ -1,3 +1,12 @@
+2001-05-28   Darren Duncan <perl@DarrenDuncan.net>
+
+	* Release 1.0401.
+	
+	* Corrected a warning that appears when converting a positional SOURCE to 
+	named where SOURCE has more array elements than NAMES.  While the correct 
+	result was returned all along, warnings can be annoying in this context.  
+	Thanks to Laurie Shammel <lshammel@imt.net> for alerting me to this.
+
 2001-05-01   Darren Duncan <perl@DarrenDuncan.net>
 
 	* Release 1.04.

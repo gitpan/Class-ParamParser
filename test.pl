@@ -8,7 +8,7 @@
 
 BEGIN { $| = 1; print "1..90\n"; }
 END {print "not ok 1\n" unless $loaded;}
-use Class::ParamParser 1.04;
+use Class::ParamParser 1.0401;
 $loaded = 1;
 print "ok 1\n";
 

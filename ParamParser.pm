@@ -17,7 +17,7 @@ require 5.004;
 
 use strict;
 use vars qw($VERSION);
-$VERSION = '1.04';
+$VERSION = '1.0401';
 
 ######################################################################
 
@@ -361,11 +361,12 @@ sub _args_are_named {
 # return a named version as a hash ref.  POSIT_NAMES is an array ref that is 
 # used as a translation table between the two formats.  The elements ot 
 # POSIT_NAMES are the new names for arguments at corresponding element numbers 
-# in ARGS.
+# in ARGS.  We are checking array lengths below to avoid warnings.
 
 sub _posit_to_named {
 	my ($self, $ra_args, $ra_pn) = @_;
-	my %args_out = map { ( $ra_pn->[$_] => $ra_args->[$_] ) } (0..$#{$ra_args});
+	my ($ind_to_use) = sort ($#{$ra_pn}, $#{$ra_args});  # largest common index
+	my %args_out = map { ( $ra_pn->[$_] => $ra_args->[$_] ) } (0..$ind_to_use);
 	delete( $args_out{''} );  # remove unwanted elements
 	return( \%args_out );
 }
@@ -425,6 +426,13 @@ make modifications to the module because it doesn't work the way you need, pleas
 send me a copy so that I can roll desirable changes into the main release.
 
 Address comments, suggestions, and bug reports to B<perl@DarrenDuncan.net>.
+
+=head1 CREDITS
+
+Thanks to Laurie Shammel <lshammel@imt.net> for alerting me to some warnings 
+that occur when converting a positional SOURCE to named where SOURCE has more 
+array elements than NAMES.  While the correct result was returned all along, 
+warnings can be annoying in this context.
 
 =head1 SEE ALSO
 
