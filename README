@@ -1,0 +1,113 @@
+                     CLASS METHOD PARAMETER PARSER
+----------------------------------------------------------------------
+
+by Darren Duncan <perl@DarrenDuncan.net>
+
+SYNOPSIS
+
+	use Class::ParamParser;
+	@ISA = qw( Class::ParamParser );
+
+	sub textfield {
+		my $self = shift( @_ );
+		my $rh_params = $self->params_to_hash( \@_, 0,
+			[ 'name', 'value', 'size', 'maxlength' ],
+			{ 'default' => 'value' } );
+		$rh_params->{'type'} = 'text';
+		return( $self->make_html_tag( 'input', $rh_params ) );
+	}
+
+	sub AUTOLOAD {
+		my $self = shift( @_ );
+		my $rh_params = $self->params_to_hash( \@_, 0, 'text', {}, 'text' );
+		my $ra_text = delete( $rh_params->{'text'} );
+		$AUTOLOAD =~ m/([^:]*)$/;
+		my $tag_name = $1;
+		return( $self->make_html_tag( $tag_name, $rh_params, $ra_text ) );
+	}
+
+DESCRIPTION
+
+This Perl 5 object class implements two methods which inherited classes can use
+to tidy up parameter lists for their own methods and functions.  The two methods
+differ in that one returns a HASH ref containing named parameters and the other
+returns an ARRAY ref containing positional parameters.
+
+Both methods can process the same kind of input parameter formats: 
+
+	empty list 
+	value 
+	value1, value2, ... 
+	name1 => value1, name2 => value2, ... 
+	-name1 => value1, -name2 => value2, ... 
+	{ -name1 => value1, name2 => value2, ... } 
+	{ name1 => value1, -name2 => value2, ... }, valueR 
+
+Those examples included single or multiple positional parameters, single or
+multiple named parameters, and a HASH ref containing named parameters (with
+optional "remaining" value afterwards).  That list of input variations is not
+exhaustive.  Named parameters can either be prefixed with "-" or left natural. 
+In addition, your methods can have multiple aliases for named parameters, but
+your own code would only have to deal with a single one.
+
+For a complete description, please refer to the POD that is contained in the
+module itself.
+
+To see full-fledged examples of this module in use, check out my other modules
+named HTML::TagMaker and HTML::FormMaker, each of whose methods accept a wide
+variety of argument formats due to the use of Class::ParamParser.
+
+KEEPING UP TO DATE
+
+These modules are constantly under development.  You should be able to find the
+newest versions at my website, "http://www.DarrenDuncan.net", on the page called
+"Perl Libraries I Made" (name subject to change).  They can also be found on CPAN
+under the author name of "DUNCAND".  
+
+I am inclined to update the copies on my web site more often, but those
+intermediate versions are more likely to have been tested less, and the modules
+may be updated day by day without increasing the version numbers.  However, the
+copies on CPAN are guaranteed to have unique version numbers when the module has
+changed.
+
+REQUIREMENTS
+
+All of my modules require Perl 5.004 or newer, even though only some of them need
+it, in the interest of consistency.  This module doesn't require anything else.
+
+INSTALLATION
+
+I haven't gotten around to doing makefiles, so you will have to install this the
+old fashioned way, by copying.  The file "ParamParser.pm" goes inside the "Class"
+folder which is in the "lib" folder that came with your Perl 5 distribution.  Or
+alternately, put it anywhere you want, but you will need to have that location
+added to your include path by your main program using something like this:
+
+	use lib '/users/me/www_files/lib';
+
+Any existing POD is embedded in the module itself, so you will have to look there
+to see it, or run a POD extractor on it yourself, or look at the copy on CPAN
+that is dutifully extracted and turned to HTML.
+
+SUPPORT
+
+Currently I don't have any support arranged with other people, lists, newsgroups,
+or otherwise.  Feel free to ask me if you can't figure things out on your own, or
+another person whom you know has used this.
+
+AUTHOR
+
+Copyright (c) 1999-2000, Darren R. Duncan. All rights reserved. These modules are
+free software; you can redistribute them and/or modify them under the same terms
+as Perl itself.  However, I do request that their copyright information remains
+attached to the files.  If you modify this module and redistribute a changed
+version then please attach a note listing the modifications.
+
+I am always interested in knowing how my work helps others, so if you put this
+module to use in any of your own code then please send me the URL.  Also, if you
+make modifications to the module because it doesn't work the way you need, please
+send me a copy so that I can roll desirable changes into the main release.
+
+Address comments, suggestions, and bug reports to perl@DarrenDuncan.net.
+
+Share and Enjoy!
