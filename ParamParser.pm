@@ -17,7 +17,7 @@ require 5.004;
 
 use strict;
 use vars qw($VERSION);
-$VERSION = '1.01';
+$VERSION = '1.02';
 
 ######################################################################
 
@@ -25,7 +25,7 @@ $VERSION = '1.01';
 
 =head2 Perl Version
 
-	5.004 (although 5.0 may work)
+	5.004
 
 =head2 Standard Modules
 
@@ -55,7 +55,7 @@ $VERSION = '1.01';
 		my $self = shift( @_ );
 		my $rh_params = $self->params_to_hash( \@_, 0, 
 			[ 'name', 'text', 'rows', 'cols' ], { 'default' => 'text', 
-			'value' => 'text', 'columns' => 'cols' }, 'text' );
+			'value' => 'text', 'columns' => 'cols' }, 'text', 1 );
 		my $ra_text = delete( $rh_params->{'text'} );
 		return( $self->make_html_tag( 'textarea', $rh_params, $ra_text ) );
 	}
@@ -126,30 +126,36 @@ name1 => value1, name2 => value2, ...
 
 =item 
 
--name1 => value1, -name2 => value2, ...
+-name1 => value1, -NAME2 => value2, ...
 
 =item 
 
-{ -name1 => value1, name2 => value2, ... }
+{ -Name1 => value1, NAME2 => value2, ... }
 
 =item 
 
-{ name1 => value1, -name2 => value2, ... }, valueR
+{ name1 => value1, -Name2 => value2, ... }, valueR
+
+=item 
+
+{ name1 => value1, -Name2 => value2, ... }, valueR1, valueR2, ...
 
 =back
 
 Those examples included single or multiple positional parameters, single or
 multiple named parameters, and a HASH ref containing named parameters (with
-optional "remaining" value afterwards).  That list of input variations is not
+optional "remaining" values afterwards).  That list of input variations is not
 exhaustive.  Named parameters can either be prefixed with "-" or left natural.
 
 We assume that the parameters are named when either they come as a HASH ref or
 the first parameter begins with a "-".  We assume that they are positional if
-there is exactly one of them.  Otherwise we are in doubt and rely on an optional
-argument to the tidying method that tells us which to guess by default.
+there is an odd number of them.  Otherwise we are in doubt and rely on an
+optional argument to the tidying method that tells us which to guess by default.
 
 We assume that any "value" may be an array ref (aka "multiple" values under the
-same name) and hence we don't do anything special with them, passing them as is.
+same name) and hence we don't do anything special with them, passing them as is.  
+The only exception to this is with "remaining" values; if there is more than one 
+of them and the first isn't an array ref, then they are all put in an array ref.
 
 If the source and destination are both positional, then they are identical.
 
@@ -159,12 +165,13 @@ This class does not export any functions or methods, so you need to call them
 using object notation.  This means using B<Class-E<gt>function()> for functions
 and B<$object-E<gt>method()> for methods.  If you are inheriting this class for
 your own modules, then that often means something like B<$self-E<gt>method()>. 
-Note that this class doesn't have any properties of its own, and doesn't use the
-implicitely passed class/object reference in any way.
+Note that this class doesn't have any properties of its own.
 
 =head1 FUNCTIONS AND METHODS
 
-=head2 params_to_hash( SOURCE, DEF, NAMES[, RENAME[, REM]] )
+=head2 params_to_hash( SOURCE, DEF, NAMES[, RENAME[, REM[, LC]]] )
+
+See below for argument descriptions.
 
 =cut
 
@@ -172,66 +179,14 @@ implicitely passed class/object reference in any way.
 
 sub params_to_hash {
 	my $self = shift( @_ );
-	my $ra_params_in = shift( @_ );
-	my $posit_by_def = shift( @_ ) || 0;	
-	my $ra_posit_names = shift( @_ ) || '';  # also single param name
-	my $rh_params_to_rename = shift( @_ );
-	my $remaining_param_name = shift( @_ ) || '';
-
-	ref( $ra_params_in ) eq 'ARRAY' or $ra_params_in = [];
-	ref( $rh_params_to_rename ) eq 'HASH' or $rh_params_to_rename = {};
-	ref( $ra_posit_names ) eq 'ARRAY' or 
-		$ra_posit_names = [$ra_posit_names];
-
-	my $is_positional;
-	if( ref( $ra_params_in->[0] ) eq 'HASH' or 
-			substr( $ra_params_in->[0], 0, 1 ) eq '-' ) {
-		$is_positional = 0;
-	} elsif( scalar( @{$ra_params_in} ) == 1 ) {
-		$is_positional = 1;
-	} else {
-		$is_positional = $posit_by_def;
-	}
-	
-	my %params_out = ();
-	
-	if( $is_positional ) {
-		foreach my $i (0..$#{$ra_params_in}) {
-			$params_out{$ra_posit_names->[$i]} = $ra_params_in->[$i];
-		}
-
-	} else {
-		if( ref( $ra_params_in->[0] ) eq 'HASH' ) {
-			%params_out = %{$ra_params_in->[0]};
-		} else {
-			%params_out = @{$ra_params_in};
-		}
-		
-		foreach my $key (keys %params_out) {
-			my $value = delete( $params_out{$key} );	
-			if( substr( $key, 0, 1 ) eq '-' ) {
-				$key = substr( $key, 1 );
-			}
-			if( $rh_params_to_rename->{$key} ) {
-				$key = $rh_params_to_rename->{$key};
-			}
-			$params_out{$key} = $value;
-		}
-
-		if( ref( $ra_params_in->[0] ) eq 'HASH' 
-				and $#{$ra_params_in} > 0 ) {
-			$params_out{$remaining_param_name} = $ra_params_in->[1];
-		}
-	}
-	
-	delete( $params_out{''} );
-
-	return( \%params_out );
+	return( $self->params_to_hash_or_array( 0, @_ ) );
 }
 
 ######################################################################
 
-=head2 params_to_array( SOURCE, DEF, NAMES[, RENAME[, REM]] )
+=head2 params_to_array( SOURCE, DEF, NAMES[, RENAME[, REM[, LC]]] )
+
+See below for argument descriptions.
 
 =cut
 
@@ -239,65 +194,141 @@ sub params_to_hash {
 
 sub params_to_array {
 	my $self = shift( @_ );
-	my $ra_params_in = shift( @_ );
+	return( $self->params_to_hash_or_array( 1, @_ ) );
+}
+
+######################################################################
+
+=head2 params_to_hash_or_array( TO, SOURCE, DEF, NAMES[, RENAME[, REM[, LC]]] )
+
+This bonus third method is used internally to implement the first two.  It has 
+an extra first argument, TO, which causes an Array ref to be returned when true 
+and a Hash ref to be returned when false; the default value is false.
+
+=cut
+
+######################################################################
+
+sub params_to_hash_or_array {
+	my $self = shift( @_ );
+	my $going_to_array = shift( @_ ) || 0;  # true means going to hash
+	
+	# Fetch our arguments
+	
+	my $ra_params_in = shift( @_ );  # also called "source"
 	my $posit_by_def = shift( @_ ) || 0;	
-	my $ra_posit_names = shift( @_ ) || '';  # single param name
+	my $ra_posit_names = shift( @_ ) || [];  # also single param name
 	my $rh_params_to_rename = shift( @_ );
-	my $remaining_param_name = shift( @_ ) || '';
+	my $remaining_param_name = shift( @_ ) || '';  # follows literal hash
+	my $lowercase_names = shift( @_ ) || 0;  # force param names into lowercase
+
+	# Make sure our arguments are in the right format
 
 	ref( $ra_params_in ) eq 'ARRAY' or $ra_params_in = [];
+	ref( $ra_posit_names ) eq 'ARRAY' or $ra_posit_names = [$ra_posit_names];
 	ref( $rh_params_to_rename ) eq 'HASH' or $rh_params_to_rename = {};
-	ref( $ra_posit_names ) eq 'ARRAY' or 
-		$ra_posit_names = [$ra_posit_names];
+
+	# Shortcut - if our source is empty, so is our output
+	
+	unless( @{$ra_params_in} ) {
+		return( $going_to_array ? [] : {} );
+	}
+
+	# Determine if source parameters are in positional or named format
 
 	my $is_positional;
 	if( ref( $ra_params_in->[0] ) eq 'HASH' or 
 			substr( $ra_params_in->[0], 0, 1 ) eq '-' ) {
-		$is_positional = 0;
-	} elsif( scalar( @{$ra_params_in} ) == 1 ) {
-		$is_positional = 1;
+		$is_positional = 0;        # literal hash or first param starts with "-"
+	} elsif( @{$ra_params_in} % 2 ) {
+		$is_positional = 1;        # odd number of parameters
 	} else {
-		$is_positional = $posit_by_def;
+		$is_positional = $posit_by_def;  # even num of params, no "-" on first
 	}
 	
+	# Declare the destination variables we will output
+	
+	my %params_out = ();
 	my @params_out = ();
 	
+	# If source is positional, then no need to worry about improper names
+	
 	if( $is_positional ) {
-		@params_out = @{$ra_params_in};
+
+		# Output = Input when both are positional
+
+		if( $going_to_array ) {
+			@params_out = @{$ra_params_in};
+
+		# Do a mapped conversion from positional to named format
+
+		} else {
+			foreach my $i (0..$#{$ra_params_in}) {
+				$params_out{$ra_posit_names->[$i]} = $ra_params_in->[$i];
+			}
+		}
+
+	# If source is named, we need to make sure names are correct
 
 	} else {
-		my %params_out_buf = ();
-	
+
+		# Fetch named parameter list from wherever it is
+
 		if( ref( $ra_params_in->[0] ) eq 'HASH' ) {
-			%params_out_buf = %{$ra_params_in->[0]};
+			%params_out = %{$ra_params_in->[0]};  # first param as literal hash
 		} else {
-			%params_out_buf = @{$ra_params_in};
+			%params_out = @{$ra_params_in};       # or whole param list
 		}
 		
-		foreach my $key (keys %params_out_buf) {
-			my $value = delete( $params_out_buf{$key} );	
+		# Coerce parameter names into correct format and resolve aliases
+
+		foreach my $key (keys %params_out) {
+			my $value = delete( $params_out{$key} );	
 			if( substr( $key, 0, 1 ) eq '-' ) {
-				$key = substr( $key, 1 );
+				$key = substr( $key, 1 );             # remove any leading "-"
 			}
-			if( $rh_params_to_rename->{$key} ) {
-				$key = $rh_params_to_rename->{$key};
+			$lowercase_names and $key = lc( $key );   # change to lowercase
+			if( exists( $rh_params_to_rename->{$key} ) ) {
+				$key = $rh_params_to_rename->{$key};  # change to favorite alias 
 			}
-			$params_out_buf{$key} = $value;
+			$params_out{$key} = $value;
 		}
+
+		# Look for any "remaining" parameter and include it in output
 
 		if( ref( $ra_params_in->[0] ) eq 'HASH' 
 				and $#{$ra_params_in} > 0 ) {
-			$params_out_buf{$remaining_param_name} = $ra_params_in->[1];
+
+			# If exactly one "remaining", or first is array ref, return it as is
+
+			if( ref( $ra_params_in->[1] ) eq 'ARRAY' 
+					or $#{$ra_params_in} == 1 ) {
+				$params_out{$remaining_param_name} = $ra_params_in->[1];
+
+			# If multiple "remaining" and first not an array, return all in array
+
+			} else {
+				$params_out{$remaining_param_name} = 
+					[@{$ra_params_in}[1..$#{$ra_params_in}]];
+			}
 		}
 
-		delete( $params_out_buf{''} );
+		# Do a mapped conversion from named to positional format
 
-		foreach my $i (0..$#{$ra_posit_names}) {
-			$params_out[$i] = $params_out_buf{$ra_posit_names->[$i]};
+		if( $going_to_array ) {
+			foreach my $i (0..$#{$ra_posit_names}) {
+				$params_out[$i] = $params_out{$ra_posit_names->[$i]};
+			}
 		}
 	}
+	
+	# Remove unwanted parameters from output list
+	
+	delete( $params_out{''} );
 
-	return( \@params_out );
+	# Return parsed params in appropriate variable type
+
+	return( $going_to_array ? \@params_out : \%params_out );
 }
 
 ######################################################################
@@ -342,7 +373,7 @@ SOURCE is named.
 The optional fourth argument, RENAME, is a HASH ref that allows us to interpret a
 variety of names from a SOURCE in named format as being aliases for one enother. 
 The keys in the hash are names to look for and the values are what to rename them
-to.  Keys are matched irregardless of whether the SOURCE names have "-" in front
+to.  Keys are matched regardless of whether the SOURCE names have "-" in front
 of them or not.  If several SOURCE names are renamed to the same hash value, then
 all but one are lost; the SOURCE should never contain more than one alias for the
 same parameter anyway.  One way to explicitely delete a parameter is to rename it
@@ -352,10 +383,22 @@ with "", as parameters with that name are discarded.
 
 The optional fifth argument, REM, is only used in circumstances where the first
 element of SOURCE is a HASH ref containing the actual named parameters that
-SOURCE would otherwise be.  If SOURCE has a second, "remaining" element following
+SOURCE would otherwise be.  If SOURCE has extra, "remaining" elements following
 the HASH ref, then REM says what its name is.  Remaining parameters with the same
 name as normal parameters (post renaming and "-" substitution) take precedence. 
-The default value for REM is "", and it is discarded unless renamed.
+The default value for REM is "", and it is discarded unless renamed.  Note that 
+the value returned with REM can be either a single scalar value, when the 
+"remaining" is a single scalar value, or an array ref, when there are more than 
+one "remaining" or the first "remaining" is an array ref (passed as is).
+
+=item 1
+
+The optional sixth argument, LC, is a boolean/scalar that forces named parameters 
+in SOURCE to be lowercased; by default this is false, meaning that the original 
+case is preserved.  Use this when you want your named parameters to have 
+case-insensitive names, for accurate matching by your own code or RENAME.  If you 
+use this, you must provide lowercased keys and values in your RENAME hash, as 
+well as lowercased NAMES and REM; none of these are lowercased for you.
 
 =back
 

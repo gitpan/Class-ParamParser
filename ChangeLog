@@ -1,3 +1,51 @@
+2001-02-04   Darren Duncan <perl@DarrenDuncan.net>
+
+	* Release 1.02.
+	
+	* This release is the first one that includes the CPAN standard files 
+	"MakeFile.pl", "Test.pl", and "Manifest", which were all created following 
+	the previous release.  "Test.pl" was used to discover several bugs that my 
+	production use of the modules didn't; their fixes are detailed below.
+	The content of "Manifest" was previously inside the "ReadMe" file.
+	
+	* Added a third method, params_to_hash_or_array(), which is now used to 
+	implement both of the existing methods; this eliminates an 80% redundancy in 
+	their code.  The first argument of the new method says which of the original 
+	two, params_to_hash() or params_to_array(), it acts like.
+	
+	* Added a sixth argument to all methods, which lowercases (makes 
+	case-insensitive) named source parameters when true, for easier matching.
+	
+	* Added programmer documentation to the various blocks of code, so it is 
+	easier to see how they work; useful because a lot is done with little code.
+	
+	* Fixed bug where RENAME failed to match parameters for renaming to "", 
+	which is the explicit signal to delete them.
+	
+	* Any SOURCE that has an odd number of elements will now be interpreted as 
+	positional format; previously, SOURCE needed to have exactly one element for 
+	this to happen.  As before, tests for named format have higher precedence, 
+	so a SOURCE whose first element is either a hash or starts with a "-" is 
+	considered named regardless of the number of elements in SOURCE.  This 
+	change fixed a bug causing an "Odd number of elements in hash list" warning 
+	when an odd number of SOURCE elements was interpreted as named format; 
+	however, that warning will still appear with an odd list starting with "-".
+
+	* If there are multiple "remaining" values in SOURCE, they are now all 
+	returned rather than just the first one.  See the parameter documentation 
+	for REM for details.  This means that previously ignored second and third 
+	"remaining" values will cause the return value for REM to be an array ref 
+	instead of a scalar, so your code may have to check for this.
+
+	* Fixed bug where NAMES defaulted to a single value of "" when it should 
+	have defaulted to an empty list; this had resulted in params_to_array() 
+	always returning a value when it should have returned none.
+
+	* Fixed bug occurring when we make positional output from an empty 
+	SOURCE whereby the output is an array containing "undef" values; the 
+	count of these values was the same as the number of values in NAMES; 
+	now the returned array is empty as it should be.
+	
 2001-01-01   Darren Duncan <perl@DarrenDuncan.net>
 
 	* Release 1.01.
@@ -23,7 +71,7 @@ you who only want to use this and not the other modules.
 
 	* This module contains complete POD within it.
 	
-	* This module requires Perl version 5.004 (although 5.0 may work).
+	* This module requires Perl version 5.004.
 	
 2000-08-23   Darren Duncan <perl@DarrenDuncan.net>
 
